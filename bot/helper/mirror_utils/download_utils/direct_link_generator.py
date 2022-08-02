@@ -15,10 +15,11 @@ from json import loads as jsnloads
 from lk21 import Bypass
 from cfscrape import create_scraper
 from bs4 import BeautifulSoup
-from base64 import standard_b64encode
+from base64 import standard_b64encode, b64decode
 from time import sleep
 
-from bot import LOGGER, UPTOBOX_TOKEN
+from bot import LOGGER, UPTOBOX_TOKEN, CRYPT
+from bot.helper.ext_utils.bot_utils import is_gdtot_link
 from bot.helper.ext_utils.exceptions import DirectDownloadLinkException
 
 fmed_list = ['fembed.net', 'fembed.com', 'femax20.com', 'fcdn.stream', 'feurl.com', 'layarkacaxxi.icu',
@@ -29,6 +30,8 @@ def direct_link_generator(link: str):
     """ direct links generator """
     if 'youtube.com' in link or 'youtu.be' in link:
         raise DirectDownloadLinkException(f"ERROR: Use watch cmds for Youtube links")
+    elif 'zippyshare.com' in link:
+        return zippy_share(link)        
     elif 'yadi.sk' in link or 'disk.yandex.com' in link:
         return yandex_disk(link)
     elif 'mediafire.com' in link:
@@ -63,6 +66,8 @@ def direct_link_generator(link: str):
         return solidfiles(link)
     elif 'krakenfiles.com' in link:
         return krakenfiles(link)
+    elif is_gdtot_link(link):
+        return gdtot(link)            
     elif 'upload.ee' in link:
         return uploadee(link)
     elif any(x in link for x in fmed_list):
@@ -119,6 +124,25 @@ def uptobox(url: str) -> str:
             else:
                 LOGGER.info(f"UPTOBOX_ERROR: {result}")
                 raise DirectDownloadLinkException(f"ERROR: {result['message']}")
+    return dl_url
+
+def zippy_share(url: str) -> str:
+    base_url = re_search('http.+.zippyshare.com', url).group()
+    response = rget(url)
+    pages = BeautifulSoup(response.text, "html.parser")
+    js_script = pages.find("div", style="margin-left: 24px; margin-top: 20px; text-align: center; width: 303px; height: 105px;")
+    if js_script is None:
+        js_script = pages.find("div", style="margin-left: -22px; margin-top: -5px; text-align: center;width: 303px;")
+    js_script = str(js_script)
+        
+    try:
+        mtk = eval(re_findall(r"\+\((.*?).\+", js_script)[0] + " + 11")
+        uri1 = re_findall(r".href.=.\"/(.*?)/\"", js_script)[0]
+        uri2 = re_findall(r"\)\+\"/(.*?)\"", js_script)[0]
+    except Exception as err:
+        LOGGER.error(err)
+        raise DirectDownloadLinkException("ERROR: Can't Generate direct link")
+    dl_url = f"{base_url}/{uri1}/{int(mtk)}/{uri2}"
     return dl_url
 
 def mediafire(url: str) -> str:
@@ -289,7 +313,7 @@ def fichier(link: str) -> str:
           raise DirectDownloadLinkException("ERROR: Unable to generate Direct Link 1fichier!")
         else:
           return dl_url
-    elif len(soup.find_all("div", {"class": "ct_warn"})) == 2:
+    elif len(soup.find_all("div", {"class": "ct_warn"})) == 3:
         str_2 = soup.find_all("div", {"class": "ct_warn"})[-1]
         if "you must wait" in str(str_2).lower():
             numbers = [int(word) for word in str(str_2).split() if word.isdigit()]
@@ -300,8 +324,9 @@ def fichier(link: str) -> str:
         elif "protect access" in str(str_2).lower():
           raise DirectDownloadLinkException(f"ERROR: This link requires a password!\n\n<b>This link requires a password!</b>\n- Insert sign <b>::</b> after the link and write the password after the sign.\n\n<b>Example:</b> https://1fichier.com/?smmtd8twfpm66awbqz04::love you\n\n* No spaces between the signs <b>::</b>\n* For the password, you can use a space!")
         else:
-            raise DirectDownloadLinkException("ERROR: Error trying to generate Direct Link from 1fichier!")
-    elif len(soup.find_all("div", {"class": "ct_warn"})) == 3:
+            print(str_2)
+            raise DirectDownloadLinkException("ERROR: Failed to generate Direct Link from 1fichier!")
+    elif len(soup.find_all("div", {"class": "ct_warn"})) == 4:
         str_1 = soup.find_all("div", {"class": "ct_warn"})[-2]
         str_3 = soup.find_all("div", {"class": "ct_warn"})[-1]
         if "you must wait" in str(str_1).lower():
@@ -374,3 +399,23 @@ def uploadee(url: str) -> str:
         return sa['href']
     except:
         raise DirectDownloadLinkException(f"ERROR: Failed to acquire download URL from upload.ee for : {url}")
+
+def gdtot(url: str) -> str:
+    """ Gdtot google drive link generator
+    By https://github.com/xcscxr """
+
+    if CRYPT is None:
+        raise DirectDownloadLinkException("ERROR: CRYPT cookie not provided")
+
+    match = re_findall(r'https?://(.+)\.gdtot\.(.+)\/\S+\/\S+', url)[0]
+
+    with rsession() as client:
+        client.cookies.update({'crypt': CRYPT})
+        client.get(url)
+        res = client.get(f"https://{match[0]}.gdtot.{match[1]}/dld?id={url.split('/')[-1]}")
+    matches = re_findall('gd=(.*?)&', res.text)
+    try:
+        decoded_id = b64decode(str(matches[0])).decode('utf-8')
+    except:
+        raise DirectDownloadLinkException("ERROR: Try in your broswer, mostly file not found or user limit exceeded!")
+    return f'https://drive.google.com/open?id={decoded_id}'
