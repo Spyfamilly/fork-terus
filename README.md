@@ -59,7 +59,7 @@ This is a Telegram Bot written in Python for mirroring files on the Internet to 
 
 ## Prerequisites
 
-- Tutorial Video from A to Z:
+- Tutorial Video from Beginning:
   - Thanks to [Wiszky](https://github.com/vishnoe115)
  <p><a href="https://youtu.be/IUmq1paCiHI"> <img src="https://img.shields.io/badge/See%20Video-black?style=for-the-badge&logo=YouTube" width="160""/></a></p>
 
