@@ -134,7 +134,7 @@ def zippy_share(url: str) -> str:
     if js_script is None:
         js_script = pages.find("div", style="margin-left: -22px; margin-top: -5px; text-align: center;width: 303px;")
     js_script = str(js_script)
-        
+
     try:
         mtk = eval(re_findall(r"\+\((.*?).\+", js_script)[0] + " + 11")
         uri1 = re_findall(r".href.=.\"/(.*?)/\"", js_script)[0]
