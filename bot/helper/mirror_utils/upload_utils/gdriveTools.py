@@ -183,7 +183,7 @@ class GoogleDriveHelper:
         media_body = MediaFileUpload(file_path,
                                      mimetype=mime_type,
                                      resumable=True,
-                                     chunksize=50 * 1024 * 1024)
+                                     chunksize=500 * 1024 * 1024)
 
         # Insert a file
         drive_file = self.__service.files().create(supportsTeamDrives=True,
@@ -844,7 +844,7 @@ class GoogleDriveHelper:
             if self.name.endswith(ext):
                 self.name = filename
         fh = FileIO(f"{path}{filename}", 'wb')
-        downloader = MediaIoBaseDownload(fh, request, chunksize=50 * 1024 * 1024)
+        downloader = MediaIoBaseDownload(fh, request, chunksize=500 * 1024 * 1024)
         done = False
         while not done:
             if self.is_cancelled:
