@@ -31,7 +31,7 @@ def direct_link_generator(link: str):
     if 'youtube.com' in link or 'youtu.be' in link:
         raise DirectDownloadLinkException(f"ERROR: Use watch cmds for Youtube links")
     elif 'zippyshare.com' in link:
-        return zippy_share(link)        
+        return zippy_share(link)
     elif 'yadi.sk' in link or 'disk.yandex.com' in link:
         return yandex_disk(link)
     elif 'mediafire.com' in link:
@@ -67,7 +67,7 @@ def direct_link_generator(link: str):
     elif 'krakenfiles.com' in link:
         return krakenfiles(link)
     elif is_gdtot_link(link):
-        return gdtot(link)            
+        return gdtot(link)
     elif 'upload.ee' in link:
         return uploadee(link)
     elif any(x in link for x in fmed_list):
