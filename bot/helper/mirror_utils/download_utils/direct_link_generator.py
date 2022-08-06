@@ -8,6 +8,7 @@ from https://github.com/AvinashReddy3108/PaperplaneExtended . I hereby take no c
 than the modifications. See https://github.com/AvinashReddy3108/PaperplaneExtended/commits/master/userbot/modules/direct_links.py
 for original authorship. """
 
+from base64 import b64decode
 from requests import get as rget, head as rhead, post as rpost, Session as rsession
 from re import findall as re_findall, sub as re_sub, match as re_match, search as re_search
 from urllib.parse import urlparse, unquote
@@ -15,7 +16,7 @@ from json import loads as jsnloads
 from lk21 import Bypass
 from cfscrape import create_scraper
 from bs4 import BeautifulSoup
-from base64 import standard_b64encode, b64decode
+from base64 import standard_b64encode
 from time import sleep
 
 from bot import LOGGER, UPTOBOX_TOKEN, CRYPT
@@ -146,7 +147,7 @@ def zippy_share(url: str) -> str:
             uri2 = re_findall(r"\+.\"/(.*?)\"", js_script)[0]
         except Exception as err:
             LOGGER.error(err)
-            raise DirectDownloadLinkException("ERROR: Can't Get Direct Link")
+            raise DirectDownloadLinkException("ERROR: Failed to Get Direct Link")
     dl_url = f"{base_url}/{uri1}/{int(mtk)}/{uri2}"
     return dl_url
 
